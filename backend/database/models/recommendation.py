@@ -50,6 +50,16 @@ class Recommendation(Base):
 
     def to_dict(self) -> dict:
         """Serialize recommendation instance to a JSON-compatible dictionary."""
+        pref = {}
+        if self.search_history:
+            pref = {
+                "soil_type": self.search_history.soil_type,
+                "climate": self.search_history.climate,
+                "sunlight": self.search_history.sunlight,
+                "space": self.search_history.space_requirement,
+                "water_needs": self.search_history.water_needs,
+            }
+        score_pct = int(round((self.match_score or 0.0) * 100)) if self.match_score is not None else None
         return {
             "rec_id": self.rec_id,
             "id": self.rec_id,
@@ -57,9 +67,12 @@ class Recommendation(Base):
             "plant_id": self.plant_id,
             "search_id": self.search_id,
             "match_score": self.match_score,
+            "compatibility_score": score_pct,
             "notes": self.notes,
             "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "user": self.user.to_dict() if self.user else None,
             "plant": self.plant.to_dict() if self.plant else None,
+            "user_preferences": pref,
         }
 
     def __repr__(self) -> str:

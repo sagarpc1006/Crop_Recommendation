@@ -23,6 +23,25 @@ _SessionFactory = None
 def get_engine():
     """Get or initialize the SQLAlchemy engine with connection pooling."""
     global _engine
+    try:
+        from flask import has_app_context, current_app
+        if has_app_context() and current_app.config.get("TESTING"):
+            if not hasattr(current_app, "_test_engine"):
+                from sqlalchemy.pool import StaticPool
+                db_url = current_app.config.get("DATABASE_URL", "sqlite:///:memory:")
+                if "sqlite" in db_url:
+                    current_app._test_engine = create_engine(
+                        db_url,
+                        connect_args={"check_same_thread": False},
+                        poolclass=StaticPool,
+                        echo=False
+                    )
+                else:
+                    current_app._test_engine = create_engine(db_url)
+            return current_app._test_engine
+    except ImportError:
+        pass
+
     if _engine is None:
         config = get_config()
         _engine = create_engine(
@@ -37,6 +56,16 @@ def get_engine():
 def get_session_factory():
     """Get or initialize the SQLAlchemy session factory."""
     global _SessionFactory
+    try:
+        from flask import has_app_context, current_app
+        if has_app_context() and current_app.config.get("TESTING"):
+            if not hasattr(current_app, "_test_session_factory"):
+                engine = get_engine()
+                current_app._test_session_factory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+            return current_app._test_session_factory
+    except ImportError:
+        pass
+
     if _SessionFactory is None:
         engine = get_engine()
         _SessionFactory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
