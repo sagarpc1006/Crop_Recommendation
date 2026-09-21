@@ -1,0 +1,55 @@
+# Render Blueprint Specification for FloraMatch
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: floramatch-db
+    databaseName: plant_db
+    user: postgres
+    plan: free
+    region: oregon
+
+services:
+  # ── Flask REST API Backend ─────────────────────────────────────────────────
+  - type: web
+    name: floramatch-backend
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt && python -m alembic upgrade head && python -m backend.database.seed
+    startCommand: gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT --workers 4 --timeout 120
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: floramatch-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: https://floramatch-frontend.onrender.com,http://localhost:8501
+      - key: PLANT_API_KEY
+        sync: false
+      - key: PLANT_API_TIMEOUT
+        value: "8"
+      - key: PLANT_API_CACHE_TTL
+        value: "300"
+
+  # ── Streamlit Web Frontend ────────────────────────────────────────────────
+  - type: web
+    name: floramatch-frontend
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
+    envVars:
+      - key: BACKEND_API_URL
+        fromService:
+          type: web
+          name: floramatch-backend
+          property: host
+          # Constructed as https://${HOST}/api/v1
+      - key: API_TIMEOUT_SECONDS
+        value: "8"

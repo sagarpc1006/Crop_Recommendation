@@ -72,5 +72,59 @@ class TestRecommendationAPI(unittest.TestCase):
         self.assertEqual(top["compatibility_score"], 100)
 
 
+    def test_get_plant_by_id_endpoint(self):
+        """Verify dedicated GET /api/plants/<plant_id> returns plant data combining external data when available."""
+        res = self.client.get("/api/plants/1")
+        self.assertEqual(res.status_code, 200)
+        body = res.get_json()
+        self.assertTrue(body["success"])
+        plant = body["data"]
+        self.assertEqual(plant["name"], "Aloe Vera")
+        self.assertIn("soil_type", plant)
+        self.assertIn("sunlight", plant)
+        self.assertIn("water_needs", plant)
+        self.assertIn("climate", plant)
+        self.assertIn("space_requirement", plant)
+
+    def test_get_plant_by_id_aliased_and_404(self):
+        """Verify GET /api/v1/plants/<plant_id> alias works and 404 is handled gracefully."""
+        res_alias = self.client.get("/api/v1/plants/1")
+        self.assertEqual(res_alias.status_code, 200)
+        self.assertTrue(res_alias.get_json()["success"])
+
+        res_404 = self.client.get("/api/plants/99999")
+        self.assertEqual(res_404.status_code, 404)
+        body_404 = res_404.get_json()
+        self.assertFalse(body_404["success"])
+        self.assertIn("not found", body_404["message"].lower())
+
+    def test_search_plants_by_name_soil_climate_sunlight(self):
+        """Verify GET /api/plants/search supports searching across name, soil, climate, and sunlight."""
+        # 1. Search by plant name
+        res_name = self.client.get("/api/plants/search?q=Aloe")
+        self.assertEqual(res_name.status_code, 200)
+        data_name = res_name.get_json()["data"]
+        self.assertTrue(any("Aloe" in p["name"] for p in data_name))
+
+        # 2. Search by soil
+        res_soil = self.client.get("/api/plants/search?q=Sandy")
+        self.assertEqual(res_soil.status_code, 200)
+        data_soil = res_soil.get_json()["data"]
+        self.assertTrue(len(data_soil) > 0)
+        self.assertTrue(any("Sandy" in p.get("soil_type", "") for p in data_soil))
+
+        # 3. Search by climate
+        res_clim = self.client.get("/api/plants/search?q=Tropical")
+        self.assertEqual(res_clim.status_code, 200)
+        data_clim = res_clim.get_json()["data"]
+        self.assertTrue(len(data_clim) > 0)
+
+        # 4. Search by sunlight
+        res_sun = self.client.get("/api/plants/search?q=Full Sun")
+        self.assertEqual(res_sun.status_code, 200)
+        data_sun = res_sun.get_json()["data"]
+        self.assertTrue(len(data_sun) > 0)
+
+
 if __name__ == "__main__":
     unittest.main()

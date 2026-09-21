@@ -54,9 +54,15 @@ class BaseConfig:
         if origin.strip()
     ]
     
-    # External API Keys (for future phases)
+    # External API Keys
     PERENUAL_API_KEY: str | None = os.getenv("PERENUAL_API_KEY")
     TREFLE_API_KEY: str | None = os.getenv("TREFLE_API_KEY")
+
+    # Generic external plant API settings (provider-agnostic)
+    PLANT_API_KEY: str | None = os.getenv("PLANT_API_KEY") or os.getenv("PERENUAL_API_KEY")
+    PLANT_API_BASE_URL: str | None = os.getenv("PLANT_API_BASE_URL")
+    PLANT_API_TIMEOUT: int = int(os.getenv("PLANT_API_TIMEOUT", "8"))
+    PLANT_API_CACHE_TTL: int = int(os.getenv("PLANT_API_CACHE_TTL", "300"))
 
 
 class DevelopmentConfig(BaseConfig):

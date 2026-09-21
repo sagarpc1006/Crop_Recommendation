@@ -52,6 +52,11 @@ class ScoredRecommendation:
             "basic_care": self.basic_care,
             "description": self.description,
             "image_url": self.image_url,
+            "soil_type": self.basic_care.get("soil_type"),
+            "climate": self.basic_care.get("climate"),
+            "sunlight": self.basic_care.get("sunlight"),
+            "water_needs": self.basic_care.get("water_needs"),
+            "space_requirement": self.basic_care.get("space_requirement"),
         }
 
 
