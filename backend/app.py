@@ -27,8 +27,9 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
         supports_credentials=True
     )
 
-    # Register API Blueprints
+    # Register API Blueprints under /api and alias /api/v1
     app.register_blueprint(api_bp)
+    app.register_blueprint(api_bp, url_prefix="/api/v1", name="api_v1")
 
     # Initialize database tables if PostgreSQL is accessible
     with app.app_context():

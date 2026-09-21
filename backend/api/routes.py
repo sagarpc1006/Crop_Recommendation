@@ -1,19 +1,17 @@
-"""REST API Blueprint defining health check and foundational route skeletons."""
+"""REST API Blueprint defining health check, catalog, and recommendation endpoints."""
 
 from flask import Blueprint, current_app, request
 from backend.utils.response import api_response, error_response
-from backend.database.connection import check_db_connection
+from backend.database.connection import check_db_connection, get_session_factory
+from backend.services.recommendation_service import RecommendationService
+from backend.services.plant_service import PlantService
 
-api_bp = Blueprint("api_v1", __name__, url_prefix="/api/v1")
+api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
 @api_bp.route("/health", methods=["GET"])
 def health_check():
-    """Health check endpoint to verify backend API and PostgreSQL connectivity.
-    
-    Returns:
-        JSON response with service status and database connectivity details.
-    """
+    """Health check endpoint to verify backend API and PostgreSQL connectivity."""
     db_status = check_db_connection()
     status_data = {
         "service": "Plant Recommendation Backend API",
@@ -21,8 +19,6 @@ def health_check():
         "environment": current_app.config.get("FLASK_ENV", "development"),
         "database": db_status,
     }
-    
-    # 200 if API is healthy; if DB is offline we still report API health with DB warning
     return api_response(
         data=status_data,
         message="Service health report",
@@ -37,16 +33,16 @@ def system_info():
         "version": "1.0.0",
         "name": "Plant Recommendation Engine API",
         "endpoints": {
-            "health": "/api/v1/health",
-            "info": "/api/v1/info",
-            "plants": "/api/v1/plants (stub)",
-            "recommendations": "/api/v1/recommendations (stub)"
+            "health": "/api/health",
+            "info": "/api/info",
+            "plants": "/api/plants",
+            "recommendations_generate": "/api/recommendations/generate",
         },
         "supported_criteria": [
             "soil_type",
             "climate",
             "sunlight",
-            "space_requirement"
+            "space"
         ]
     }
     return api_response(data=info, message="System information")
@@ -54,22 +50,79 @@ def system_info():
 
 @api_bp.route("/plants", methods=["GET"])
 def list_plants():
-    """Skeleton endpoint for retrieving plant catalog (to be implemented in future phase)."""
-    return api_response(
-        data=[],
-        message="Plant catalog endpoint ready for data integration in upcoming stage.",
-        meta={"total": 0}
-    )
+    """Retrieve plant catalog from database or default catalog."""
+    SessionFactory = get_session_factory()
+    session = SessionFactory()
+    try:
+        service = PlantService(session)
+        plants = service.get_all_plants()
+        return api_response(
+            data=plants,
+            message="Plant catalog retrieved successfully.",
+            meta={"total": len(plants)}
+        )
+    finally:
+        session.close()
+
+
+@api_bp.route("/recommendations/generate", methods=["POST"])
+def generate_recommendations():
+    """Generate transparent, scoring-based plant recommendations.
+    
+    Accepts JSON body:
+    {
+        "soil_type": "Loamy",
+        "climate": "Tropical",
+        "sunlight": "Partial Shade",
+        "space": "Small",
+        "limit": 5,
+        "user_id": 1  (optional)
+    }
+    """
+    if not request.is_json and request.content_length and request.content_length > 0:
+        return error_response(
+            message="Request content-type must be application/json",
+            status_code=400
+        )
+
+    payload = request.get_json(silent=True) or {}
+    limit = payload.get("limit", 5)
+    try:
+        limit = max(1, min(50, int(limit)))
+    except (ValueError, TypeError):
+        limit = 5
+
+    user_id = payload.get("user_id")
+    if user_id is not None:
+        try:
+            user_id = int(user_id)
+        except (ValueError, TypeError):
+            user_id = None
+
+    SessionFactory = get_session_factory()
+    session = SessionFactory()
+    try:
+        service = RecommendationService(session)
+        result = service.generate_recommendations(
+            criteria_data=payload,
+            limit=limit,
+            user_id=user_id
+        )
+        return api_response(
+            data=result,
+            message=f"Generated {len(result['recommendations'])} plant recommendations.",
+            status_code=200
+        )
+    except Exception as e:
+        return error_response(
+            message=f"Failed to compute recommendations: {str(e)}",
+            status_code=500
+        )
+    finally:
+        session.close()
 
 
 @api_bp.route("/recommendations", methods=["POST"])
-def get_recommendations():
-    """Skeleton endpoint for plant recommendations (to be implemented in future phase)."""
-    payload = request.get_json(silent=True) or {}
-    return api_response(
-        data={
-            "received_input": payload,
-            "recommendations": []
-        },
-        message="Recommendation logic endpoint ready for algorithm implementation in upcoming stage."
-    )
+def legacy_recommendations():
+    """Legacy recommendation endpoint alias forwarding to recommendation generator."""
+    return generate_recommendations()
