@@ -22,6 +22,7 @@ def normalize_database_url(url: str | None) -> str:
     
     Render, Railway, and Heroku often provide URLs starting with 'postgres://',
     which SQLAlchemy 1.4+ / 2.0 requires to be 'postgresql://'.
+    SQLite URLs are passed through unchanged.
     """
     if not url:
         # Fallback to local default if nothing is specified
@@ -31,6 +32,10 @@ def normalize_database_url(url: str | None) -> str:
         port = os.getenv("DB_PORT", "5432")
         name = os.getenv("DB_NAME", "plant_db")
         return f"postgresql://{user}:{password}@{host}:{port}/{name}"
+
+    # SQLite URLs need no normalization
+    if url.startswith("sqlite"):
+        return url
 
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql://", 1)

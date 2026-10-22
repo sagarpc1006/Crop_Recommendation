@@ -49,21 +49,89 @@ def _score_style(score: float) -> tuple[str, str, str]:
     return "#065f46", "#d1fae5", "Excellent match"
 
 
+def render_html(html: str, *args, **kwargs):
+    """Render an HTML block safely in Streamlit without markdown code-block triggers.
+    
+    Markdown syntax interprets any line with 4+ spaces of indentation as a <pre><code> block.
+    Stripping leading indentation from each line guarantees pure, proper HTML rendering.
+    """
+    clean_lines = [line.strip() for line in html.strip().splitlines() if line.strip()]
+    st.markdown("\n".join(clean_lines), unsafe_allow_html=True)
+
+
 def inject_custom_css():
     """Inject the complete FloraMatch design system into the Streamlit app."""
-    st.markdown("""
+    render_html("""
     <style>
     /* ── Google Font ─────────────────────────────────────────────────── */
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
     html, body, [class*="css"], .stApp {
         font-family: 'Plus Jakarta Sans', sans-serif !important;
-        background-color: #f4f7f4;
+        background-color: #f4f7f4 !important;
+        color: #0f3d2e !important;
     }
 
     /* ── Hide default Streamlit chrome ───────────────────────────────── */
     #MainMenu, footer, header { visibility: hidden; }
     .block-container { padding-top: 1.5rem !important; max-width: 1200px !important; }
+
+    /* ── Form Labels & Controls Contrast Fix ──────────────────────────── */
+    div[data-testid="stForm"] {
+        background: white !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        border: 1px solid #d4edda !important;
+        box-shadow: 0 4px 18px rgba(15,61,46,0.06) !important;
+    }
+    div[data-testid="stForm"] label,
+    div[data-testid="stWidgetLabel"] label,
+    div[data-testid="stWidgetLabel"] p,
+    .stSelectbox label,
+    .stSlider label,
+    .stCheckbox label {
+        color: #0f3d2e !important;
+        font-weight: 700 !important;
+        font-size: 0.92rem !important;
+    }
+    div[data-baseweb="select"] > div {
+        background-color: #ffffff !important;
+        border: 1.5px solid #c8e6c9 !important;
+        border-radius: 10px !important;
+    }
+    div[data-baseweb="select"] span,
+    div[data-baseweb="select"] div {
+        color: #0f3d2e !important;
+        font-weight: 500 !important;
+    }
+    div[data-testid="stFormSubmitButton"] button {
+        background: linear-gradient(135deg, #1b6b45 0%, #2d9e6b 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        padding: 0.65rem 1.5rem !important;
+        box-shadow: 0 4px 14px rgba(45,158,107,0.3) !important;
+        transition: all 0.2s ease !important;
+    }
+    div[data-testid="stFormSubmitButton"] button:hover {
+        background: linear-gradient(135deg, #145536 0%, #248257 100%) !important;
+        box-shadow: 0 6px 20px rgba(45,158,107,0.45) !important;
+        transform: translateY(-1px) !important;
+    }
+    button[kind="secondary"] {
+        border-radius: 10px !important;
+        border: 1.5px solid #c8e6c9 !important;
+        background-color: white !important;
+        color: #0f3d2e !important;
+        font-weight: 600 !important;
+    }
+    button[kind="secondary"]:hover {
+        background-color: #f0fdf4 !important;
+        border-color: #2d9e6b !important;
+        color: #1b6b45 !important;
+    }
 
     /* ── Sidebar ─────────────────────────────────────────────────────── */
     section[data-testid="stSidebar"] {
@@ -315,7 +383,7 @@ def inject_custom_css():
 
 def render_hero(show_cta: bool = False):
     """Render the main hero banner. Returns True if CTA was clicked."""
-    st.markdown("""
+    render_html("""
     <div class="flora-hero">
         <h1>🌿 FloraMatch</h1>
         <p>Find the right plant for your environment.</p>
@@ -326,7 +394,7 @@ def render_hero(show_cta: bool = False):
             <span class="stat-chip">🌐 External API Enrichment</span>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
     if show_cta:
         col1, col2, col3 = st.columns([1, 1.2, 1])
         with col2:
@@ -336,12 +404,12 @@ def render_hero(show_cta: bool = False):
 
 def render_header(title: str, subtitle: str):
     """Compact header for non-home pages."""
-    st.markdown(f"""
+    render_html(f"""
     <div class="flora-hero" style="padding:1.8rem 2rem;">
         <h1 style="font-size:1.8rem">🌿 {title}</h1>
         <p style="font-size:0.95rem">{subtitle}</p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -417,11 +485,16 @@ def render_plant_card(
         raw_score = score if score is not None else plant.get("compatibility_score")
         show_score = bool(raw_score is not None and raw_score > 0)
 
-    # Image section
+    # Image section with graceful error fallback
     if img_url:
-        img_html = f'<img src="{img_url}" style="width:100%;height:150px;object-fit:cover;" />'
+        img_html = (
+            f'<div style="width:100%;height:150px;overflow:hidden;background:#e8f5e9;position:relative;">'
+            f'<img src="{img_url}" alt="{name}" style="width:100%;height:150px;object-fit:cover;display:block;" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\';" />'
+            f'<div class="plant-card-image" style="height:150px;display:none;align-items:center;justify-content:center;font-size:3.5rem;background:#e8f5e9;">{emoji}</div>'
+            f'</div>'
+        )
     else:
-        img_html = f'<div class="plant-card-image" style="height:150px;">{emoji}</div>'
+        img_html = f'<div class="plant-card-image" style="height:150px;display:flex;align-items:center;justify-content:center;font-size:3.5rem;background:#e8f5e9;">{emoji}</div>'
 
     # Score or Badge header
     if show_score:
@@ -431,53 +504,53 @@ def render_plant_card(
         score_width = min(score_pct, 100)
         score_color = "#2d9e6b" if score_pct >= 70 else "#f59e0b" if score_pct >= 45 else "#ef4444"
 
-        score_html = f"""
-            <span class="score-badge" style="background:{bg};color:{fg}">
-                ★ {score_pct}% &nbsp;{label}
-            </span>
-            <div class="score-bar-wrap">
-                <div class="score-bar" style="width:{score_width}%;background:{score_color}"></div>
-            </div>
-        """
+        score_html = (
+            f'<div style="margin-bottom:0.8rem;">'
+            f'<span class="score-badge" style="background:{bg};color:{fg};display:inline-flex;padding:0.25rem 0.75rem;border-radius:50px;font-weight:700;font-size:0.8rem;">★ {score_pct}% &nbsp;{label}</span>'
+            f'<div class="score-bar-wrap" style="background:#f0f0f0;border-radius:99px;height:6px;margin-top:0.4rem;overflow:hidden;">'
+            f'<div class="score-bar" style="width:{score_width}%;background:{score_color};height:6px;border-radius:99px;"></div>'
+            f'</div></div>'
+        )
     else:
         src_label = "🌐 External API" if source != "local" else "🗄️ Botanical Database"
         src_cls   = "badge-blue" if source != "local" else "badge-green"
-        score_html = f"""
-            <div style="margin-bottom:0.75rem">
-                <span class="badge {src_cls}">{src_label}</span>
-            </div>
-        """
+        score_html = f'<div style="margin-bottom:0.75rem"><span class="badge {src_cls}">{src_label}</span></div>'
 
     # Matched / Unmatched factors
     factors_html = ""
     if matched:
         factors_html += "".join(
-            f'<span class="detail-chip" style="font-size:0.75rem;margin:0.15rem;background:#f0fdf4;border-color:#bbf7d0;color:#166534">✓ {m}</span>'
+            f'<span class="detail-chip" style="font-size:0.75rem;margin:0.15rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:50px;padding:0.2rem 0.6rem;display:inline-block;">✓ {m}</span>'
             for m in matched[:2]
         )
     if unmatched:
         factors_html += "".join(
-            f'<span class="detail-chip" style="font-size:0.75rem;margin:0.15rem;background:#fff7ed;border-color:#fed7aa;color:#9a3412">⚠️ {u}</span>'
+            f'<span class="detail-chip" style="font-size:0.75rem;margin:0.15rem;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:50px;padding:0.2rem 0.6rem;display:inline-block;">⚠️ {u}</span>'
             for u in unmatched[:1]
         )
 
-    st.markdown(f"""
-    <div class="plant-card">
-        {img_html}
-        <div class="plant-card-body">
-            <div class="plant-card-name">{emoji} {name}</div>
-            {score_html}
-            <div class="plant-meta">
-                <div class="plant-meta-row">{SOIL_ICONS.get(soil,'🌍')} <span class="plant-meta-label">Soil</span>{soil}</div>
-                <div class="plant-meta-row">{SUNLIGHT_ICONS.get(sunlight,'☀️')} <span class="plant-meta-label">Sunlight</span>{sunlight}</div>
-                <div class="plant-meta-row">{WATER_ICONS.get(water,'💧')} <span class="plant-meta-label">Water</span>{water}</div>
-                <div class="plant-meta-row">{CLIMATE_ICONS.get(climate,'🌡️')} <span class="plant-meta-label">Climate</span>{climate}</div>
-                <div class="plant-meta-row">📐 <span class="plant-meta-label">Space</span>{space}</div>
-            </div>
-            {factors_html}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    meta_html = (
+        f'<div class="plant-meta" style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.9rem;">'
+        f'<div class="plant-meta-row" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#444;">{SOIL_ICONS.get(soil,"🌍")} <span class="plant-meta-label" style="font-weight:600;color:#0f3d2e;min-width:70px;">Soil</span>{soil}</div>'
+        f'<div class="plant-meta-row" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#444;">{SUNLIGHT_ICONS.get(sunlight,"☀️")} <span class="plant-meta-label" style="font-weight:600;color:#0f3d2e;min-width:70px;">Sunlight</span>{sunlight}</div>'
+        f'<div class="plant-meta-row" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#444;">{WATER_ICONS.get(water,"💧")} <span class="plant-meta-label" style="font-weight:600;color:#0f3d2e;min-width:70px;">Water</span>{water}</div>'
+        f'<div class="plant-meta-row" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#444;">{CLIMATE_ICONS.get(climate,"🌡️")} <span class="plant-meta-label" style="font-weight:600;color:#0f3d2e;min-width:70px;">Climate</span>{climate}</div>'
+        f'<div class="plant-meta-row" style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#444;">📐 <span class="plant-meta-label" style="font-weight:600;color:#0f3d2e;min-width:70px;">Space</span>{space}</div>'
+        f'</div>'
+    )
+
+    card_html = (
+        f'<div class="plant-card">'
+        f'{img_html}'
+        f'<div class="plant-card-body">'
+        f'<div class="plant-card-name" style="font-size:1.05rem;font-weight:700;color:#0f3d2e;margin:0 0 0.5rem;">{emoji} {name}</div>'
+        f'{score_html}'
+        f'{meta_html}'
+        f'{"<div style=\'margin-top:0.5rem;\'>" + factors_html + "</div>" if factors_html else ""}'
+        f'</div>'
+        f'</div>'
+    )
+    render_html(card_html)
 
     if on_details:
         btn_key = f"card_details_{plant.get('plant_id', name)}_{key_suffix}"
@@ -491,7 +564,7 @@ def render_empty_state(criteria: dict):
     climate = criteria.get("climate", "—")
     sunlight = criteria.get("sunlight", "—")
     space = criteria.get("space", "—")
-    st.markdown(f"""
+    render_html(f"""
     <div style="text-align:center;padding:2.5rem 1.5rem;background:#fbfbfb;border-radius:16px;border:1px dashed #d0d7de;margin:1rem 0;">
         <div style="font-size:3.5rem;margin-bottom:0.6rem">🌱</div>
         <h3 style="color:#0f3d2e;margin-bottom:0.4rem;font-size:1.2rem">No Matching Plants Found</h3>
@@ -506,7 +579,7 @@ def render_empty_state(criteria: dict):
             • Allow more space or adjust soil texture.
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
 
 def render_error_state(error_type: str, message: str):
@@ -530,7 +603,7 @@ def render_error_state(error_type: str, message: str):
         desc = message or "An unexpected error occurred while communicating with the backend."
         code_snip = None
 
-    st.markdown(f"""
+    render_html(f"""
     <div style="background:#fff5f5;border:1px solid #fed7d7;border-radius:14px;padding:1.2rem 1.4rem;margin:1rem 0;">
         <h4 style="color:#c53030;margin:0 0 0.4rem 0;display:flex;align-items:center;gap:0.5rem;font-size:1rem">
             {title}
@@ -539,7 +612,7 @@ def render_error_state(error_type: str, message: str):
             {desc}
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """)
     if code_snip:
         st.code(code_snip, language="bash")
 
@@ -607,7 +680,7 @@ def render_plant_detail(plant: dict, score_data: dict | None = None):
         if score_data:
             score_pct = score_data.get("score_pct", 0)
             fg, bg, label = _score_style(score_pct)
-            st.markdown(f"""
+            render_html(f"""
             <div style="background:{bg};color:{fg};border-radius:12px;padding:0.9rem 1.2rem;margin-bottom:1rem;border:1px solid rgba(0,0,0,0.06)">
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <strong>🎯 Recommendation Match: {score_pct}%</strong>
@@ -617,7 +690,7 @@ def render_plant_detail(plant: dict, score_data: dict | None = None):
                     <div style="width:{min(score_pct,100)}%;background:{fg};height:8px;border-radius:99px"></div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
             matched   = score_data.get("matched_factors", [])
             unmatched = score_data.get("unmatched_factors", [])
@@ -635,12 +708,12 @@ def render_plant_detail(plant: dict, score_data: dict | None = None):
                             st.markdown(f'<div class="care-tip" style="background:#fff7ed;border-color:#fed7aa;color:#9a3412">✗ {u}</div>', unsafe_allow_html=True)
 
         # Botanical Overview
-        st.markdown(f"""
+        render_html(f"""
         <div class="info-section-card">
             <h4 style="color:#0f3d2e;margin:0 0 0.5rem 0;font-size:1.05rem">📖 Botanical Overview</h4>
             <p style="color:#374151;line-height:1.65;font-size:0.92rem;margin:0">{description}</p>
         </div>
-        """, unsafe_allow_html=True)
+        """)
 
     # 2. Environmental Requirements Grid (5 Key Cards)
     st.markdown("<h3 style='color:#0f3d2e;margin:1.5rem 0 0.8rem 0;'>🌾 Environmental & Growing Requirements</h3>", unsafe_allow_html=True)
@@ -656,14 +729,14 @@ def render_plant_detail(plant: dict, score_data: dict | None = None):
     req_cols = st.columns(5)
     for col, (ic, title, val, sub) in zip(req_cols, reqs):
         with col:
-            st.markdown(f"""
+            render_html(f"""
             <div class="req-card">
                 <div style="font-size:1.6rem;margin-bottom:0.3rem">{ic}</div>
                 <div class="req-card-label">{title}</div>
                 <div class="req-card-val">{val}</div>
                 <div style="font-size:0.75rem;color:#64748b;margin-top:0.2rem">{sub}</div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
     st.markdown("<div style='height:0.8rem'></div>", unsafe_allow_html=True)
 
@@ -1043,15 +1116,15 @@ def render_my_history_table(recommendations: list[dict]):
         c1, c2, c3, c4, c5 = st.columns([2, 4, 2, 3, 3])
 
         with c1:
-            st.markdown(f"""
+            render_html(f"""
             <div style="padding-top:0.3rem">
                 <strong style="color:#0f3d2e;font-size:0.95rem">{date_short}</strong><br>
                 <span style="color:#888;font-size:0.75rem">{date_time}</span>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         with c2:
-            st.markdown(f"""
+            render_html(f"""
             <div style="display:flex;align-items:center;gap:0.6rem;padding-top:0.2rem">
                 <span style="font-size:1.6rem">{icon}</span>
                 <div>
@@ -1059,22 +1132,22 @@ def render_my_history_table(recommendations: list[dict]):
                     <span style="font-size:0.78rem;color:#64748b;font-style:italic">{sci_name}</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         with c3:
-            st.markdown(f"""
+            render_html(f"""
             <div style="padding-top:0.35rem">
                 <span class="score-pill {score_class}">{score_pct}%</span>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         with c4:
-            st.markdown(f"""
+            render_html(f"""
             <div style="font-size:0.8rem;color:#475569;padding-top:0.3rem;line-height:1.4">
                 🌱 {soil_p}<br>
                 ☀️ {sun_p}
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
         with c5:
             btn_col1, btn_col2 = st.columns(2)
@@ -1141,7 +1214,7 @@ def render_my_history_cards(recommendations: list[dict]):
         icon = PLANT_FALLBACK_IMAGES.get(plant_name.lower().strip(), "🌿")
 
         with cols[idx % 3]:
-            st.markdown(f"""
+            render_html(f"""
             <div class="history-card-box">
                 <div>
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.6rem">
@@ -1156,7 +1229,7 @@ def render_my_history_cards(recommendations: list[dict]):
                     </div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """)
 
             btn_col1, btn_col2 = st.columns(2)
             with btn_col1:

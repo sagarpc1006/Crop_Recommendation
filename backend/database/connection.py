@@ -44,12 +44,24 @@ def get_engine():
 
     if _engine is None:
         config = get_config()
-        _engine = create_engine(
-            config.DATABASE_URL,
-            pool_pre_ping=True,  # Automatically tests connection freshness
-            pool_recycle=300,    # Prevents dropped connections on cloud providers
-            echo=(config.DEBUG and not getattr(config, "TESTING", False)),
-        )
+        db_url = config.DATABASE_URL
+        is_sqlite = "sqlite" in db_url
+
+        if is_sqlite:
+            from sqlalchemy.pool import StaticPool
+            _engine = create_engine(
+                db_url,
+                connect_args={"check_same_thread": False},
+                poolclass=StaticPool,
+                echo=False,
+            )
+        else:
+            _engine = create_engine(
+                db_url,
+                pool_pre_ping=True,  # Automatically tests connection freshness
+                pool_recycle=300,    # Prevents dropped connections on cloud providers
+                echo=(config.DEBUG and not getattr(config, "TESTING", False)),
+            )
     return _engine
 
 
@@ -97,7 +109,7 @@ def check_db_connection() -> dict[str, str | bool]:
             conn.execute(text("SELECT 1"))
         return {
             "connected": True,
-            "message": "PostgreSQL connection successful"
+            "message": "Database connection successful"
         }
     except Exception as e:
         logger.warning(f"Database connection check failed: {e}")

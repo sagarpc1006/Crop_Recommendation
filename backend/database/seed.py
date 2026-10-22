@@ -57,7 +57,7 @@ SAMPLE_PLANTS = [
         "water_needs": "Low",
         "space_requirement": "Minimal",
         "description": "An architectural, resilient houseplant with upright sword-like leaves. Thrives in virtually any light setting and requires infrequent watering.",
-        "image_url": "https://images.unsplash.com/photo-1593482892290-f54927ae1bf6?auto=format&fit=crop&w=600&q=80",
+        "image_url": "https://images.unsplash.com/photo-1572688484438-313a6e50c333?auto=format&fit=crop&w=600&q=80",
     },
     {
         "name": "Marigold",

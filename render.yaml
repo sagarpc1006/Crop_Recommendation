@@ -19,7 +19,7 @@ services:
     startCommand: gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT --workers 4 --timeout 120
     healthCheckPath: /api/health
     envVars:
-      - key: FLASK_ENV
+      - key: FLASK_ENV  
         value: production
       - key: SECRET_KEY
         generateValue: true
