@@ -15,5 +15,5 @@ BACKEND_API_URL = os.getenv("BACKEND_API_URL", "http://localhost:5000/api/v1").r
 API_TIMEOUT_SECONDS = int(os.getenv("API_TIMEOUT_SECONDS", "5"))
 
 # Application visual metadata
-APP_TITLE = "FloraMatch - Plant Recommendation System"
-APP_TAGLINE = "Smart botanical recommendations tailored to your soil, climate, sunlight, and space."
+APP_TITLE = "GROWIT – Plant Recommendation Website"
+APP_TAGLINE = "Smart plant recommendations tailored to your soil, climate, sunlight, and space."

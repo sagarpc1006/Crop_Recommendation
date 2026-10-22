@@ -125,6 +125,42 @@ class TestRecommendationAPI(unittest.TestCase):
         data_sun = res_sun.get_json()["data"]
         self.assertTrue(len(data_sun) > 0)
 
+    def test_invalid_recommendation_content_type(self):
+        """Verify non-JSON payload returns 400."""
+        res = self.client.post(
+            "/api/recommendations/generate",
+            data="not a json payload",
+            content_type="text/plain"
+        )
+        self.assertEqual(res.status_code, 400)
+        body = res.get_json()
+        self.assertFalse(body["success"])
+
+    def test_invalid_recommendation_payload_not_dict(self):
+        """Verify non-object JSON payload returns 400."""
+        res = self.client.post(
+            "/api/recommendations/generate",
+            data=json.dumps([1, 2, 3]),
+            content_type="application/json"
+        )
+        self.assertEqual(res.status_code, 400)
+        body = res.get_json()
+        self.assertFalse(body["success"])
+
+    def test_search_plants_missing_query(self):
+        """Verify search without query returns 400."""
+        res = self.client.get("/api/plants/search")
+        self.assertEqual(res.status_code, 400)
+        body = res.get_json()
+        self.assertFalse(body["success"])
+
+    def test_health_check_growit_branding(self):
+        """Verify health check reports GROWIT brand."""
+        res = self.client.get("/api/health")
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()["data"]
+        self.assertIn("GROWIT", data["service"])
+
 
 if __name__ == "__main__":
     unittest.main()

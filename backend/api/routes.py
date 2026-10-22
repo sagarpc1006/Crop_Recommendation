@@ -23,7 +23,7 @@ def health_check():
     db_status = check_db_connection()
     api_cache = _plant_api.cache_info()
     status_data = {
-        "service": "Plant Recommendation Backend API",
+        "service": "GROWIT Plant Recommendation Backend API",
         "status": "online",
         "environment": current_app.config.get("FLASK_ENV", "development"),
         "database": db_status,
@@ -41,7 +41,7 @@ def system_info():
     """Returns metadata about available system capabilities and architecture."""
     info = {
         "version": "1.0.0",
-        "name": "Plant Recommendation Engine API",
+        "name": "GROWIT Plant Recommendation Engine API",
         "endpoints": {
             "health": "/api/health",
             "info": "/api/info",
@@ -231,7 +231,19 @@ def generate_recommendations():
             status_code=400
         )
 
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if payload is None and request.content_length and request.content_length > 0:
+        return error_response(
+            message="Malformed JSON in request body",
+            status_code=400
+        )
+    if payload is None:
+        payload = {}
+    if not isinstance(payload, dict):
+        return error_response(
+            message="Request body must be a JSON object",
+            status_code=400
+        )
     limit = payload.get("limit", 5)
     try:
         limit = max(1, min(50, int(limit)))

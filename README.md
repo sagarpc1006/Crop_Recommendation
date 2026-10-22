@@ -1,17 +1,41 @@
-# FloraMatch — Plant Recommendation System
+# GROWIT – Plant Recommendation Website
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/backend-Flask%203.0-green.svg)](https://flask.palletsprojects.com/)
 [![Streamlit](https://img.shields.io/badge/frontend-Streamlit%201.35-red.svg)](https://streamlit.io/)
 [![PostgreSQL](https://img.shields.io/badge/database-PostgreSQL-blue.svg)](https://www.postgresql.org/)
 [![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy%202.0-orange.svg)](https://www.sqlalchemy.org/)
-[![Tests](https://img.shields.io/badge/tests-65%20passed-brightgreen.svg)](tests/)
 
-FloraMatch is an end-to-end, production-ready web application providing transparent, explainable plant recommendations based on environmental growing criteria: **soil type**, **climate**, **sunlight availability**, and **available space**.
+## 📌 Project Title
 
-The application features a decoupled architecture: an interactive **Streamlit frontend**, a robust **Flask REST API**, a deterministic **Recommendation Engine**, a persistent **PostgreSQL relational database** with **Alembic migrations**, and external botanical data enrichment via the **Perenual API**.
+**GROWIT – Plant Recommendation Website**
 
----
+## 📖 Project Description
+
+GROWIT is a smart web application that recommends suitable plants based on environmental growing conditions. Users provide their soil type, climate, sunlight availability, and available space, and the system recommends the most compatible plants using a content-based recommendation approach with transparent, explainable scoring.
+
+## ❓ Problem Statement
+
+Selecting the right plant for a specific environment is challenging for home gardeners, students, and urban farmers. Factors such as soil composition, local climate, available sunlight, and spatial constraints must be carefully considered. GROWIT addresses this problem by providing personalized, data-driven plant recommendations that match plants to the user's specific growing conditions.
+
+## 🎯 Objectives
+
+1. Develop a web-based plant recommendation system using Streamlit and Flask.
+2. Implement a content-based recommendation engine evaluating soil, climate, sunlight, and space compatibility.
+3. Store and manage plant data using PostgreSQL with SQLAlchemy ORM.
+4. Integrate external botanical APIs (Perenual) for enriched plant information.
+5. Provide an intuitive, user-friendly interface for plant discovery and care guidance.
+
+## ✨ Features
+
+- **Plant Recommendation** — Content-based recommendations using weighted scoring across 4 environmental factors
+- **Plant Search** — Full-text search across plant name, soil type, climate, and sunlight
+- **Plant Details** — Comprehensive plant profiles with care instructions and growing requirements
+- **User History** — Persistent recommendation history stored in PostgreSQL
+- **Care Guide** — Built-in plant care knowledge base covering watering, light, soil, and fertilizing
+- **External API Enrichment** — Live plant images and care data from Perenual botanical API
+- **User Profile** — Lightweight user profile with name, email, and location
+- **About Section** — Architecture documentation, API reference, and database schema
 
 ## 🏛️ System Architecture
 
@@ -22,328 +46,255 @@ Streamlit Frontend (Port 8501)
  ↓  HTTP REST requests (JSON)
 Flask REST API (Port 5000)
  ↓  Criteria evaluation & scoring
-Recommendation Engine (Deterministic 4-Pillar Algorithm)
+Recommendation Engine (Content-Based Weighted Scoring)
  ↓  Candidate query & persistent history
 PostgreSQL Database (Users, Plants, Recommendations, Search History)
  ↓  External enrichment (cached with fallback)
-External Plant API (Perenual API)
+External Botanical API (Perenual API)
 ```
 
-### Architectural Responsibilities
+### Component Responsibilities
 
 | Component | Technology | Primary Role |
 | :--- | :--- | :--- |
-| **Streamlit Frontend** | Streamlit, Requests, Custom CSS | Interactive UI, recommendation wizard, multi-criteria plant search, plant details view, and "My History" table/cards. |
-| **Flask REST API** | Flask 3.0, Flask-CORS, Gunicorn | Exposes structured REST endpoints under `/api` and `/api/v1`, validates payloads, handles errors, and returns standard JSON response envelopes. |
-| **Recommendation Engine** | Python Dataclasses | Deterministic scoring algorithm evaluating Climate (30%), Sunlight (30%), Soil (20%), and Space (20%) with explainability factors. |
-| **PostgreSQL Database** | PostgreSQL, SQLAlchemy 2.0, Alembic | Persistent storage of plant catalog, user profiles, search criteria, and recommendation history records with connection pooling. |
-| **External Plant API** | Requests, In-Process TTL Cache | Supplements local catalog with images and detailed care instructions via Perenual API with resilient offline fallback. |
+| **Streamlit Frontend** | Streamlit, Requests, Custom CSS | Interactive UI, recommendation form, plant search, plant details, history, care guide, about |
+| **Flask REST API** | Flask 3.0, Flask-CORS, Gunicorn | REST endpoints under `/api`, validation, error handling, JSON response envelopes |
+| **Recommendation Engine** | Python Dataclasses | Deterministic scoring: Climate (30%), Sunlight (30%), Soil (20%), Space (20%) with explainability |
+| **PostgreSQL Database** | PostgreSQL, SQLAlchemy 2.0, Alembic | Persistent storage of plants, users, recommendations, and search history |
+| **External Botanical API** | Perenual API, In-Process TTL Cache | Supplements local catalog with images and care data; graceful offline fallback |
 
----
+## 🧰 Technology Stack
 
-## 📁 Repository Structure
+- **Frontend:** Streamlit 1.35+
+- **Backend:** Flask 3.0, Flask-CORS
+- **Database:** PostgreSQL 14+, SQLAlchemy 2.0, Alembic
+- **External API:** Perenual Plant API
+- **Testing:** pytest 8.0+
+- **Deployment:** Gunicorn, Render, Railway
 
-```text
-Crop_Recommendation/
-├── Procfile                      # Process declaration for cloud platforms (Render/Railway)
-├── render.yaml                   # Infrastructure as Code Blueprint for Render
-├── railway.json                  # Deployment configuration for Railway
-├── alembic.ini                   # Alembic database migration configuration
-├── requirements.txt              # Production and development dependencies
-├── .env.example                  # Safe environment variable configuration template
-├── .gitignore                    # Git ignore file for secrets and environments
-├── README.md                     # Project documentation & operational manual
-│
-├── backend/                      # Python Flask Backend REST API
-│   ├── app.py                   # Flask Application Factory & Server Entry Point
-│   ├── config.py                # Environment-based configuration (Dev/Prod/Test)
-│   ├── api/                     # REST API Blueprint routes
-│   │   ├── __init__.py
-│   │   └── routes.py            # API Endpoints (/health, /plants, /recommendations)
-│   ├── database/                # Database connection, models, CLI, and seed script
-│   │   ├── __init__.py
-│   │   ├── connection.py        # SQLAlchemy engine, session maker, connection pool
-│   │   ├── manage.py            # Database CLI management tool
-│   │   ├── seed.py              # Sample plants and demonstration data seeder
-│   │   └── models/              # SQLAlchemy ORM Models
-│   │       ├── user.py          # User model (users table)
-│   │       ├── plant.py         # Plant model (plants table with unique name index)
-│   │       ├── recommendation.py# Recommendation model (recommendations table)
-│   │       └── search_history.py# SearchHistory model (search_history table)
-│   ├── services/                # Business logic layer
-│   │   ├── plant_service.py     # Plant retrieval and query operations
-│   │   ├── plant_api_service.py # External plant API orchestrator & caching
-│   │   └── recommendation_service.py # Recommendation generator & DB logger
-│   ├── recommendation/          # Recommendation engine package
-│   │   └── engine.py            # Scoring heuristics, weights, and criteria dataclass
-│   ├── integrations/            # External API client implementations
-│   │   ├── perenual_client.py   # Perenual API HTTP client
-│   │   └── schema.py            # Normalized plant schema
-│   └── utils/                   # Shared utilities
-│       └── response.py          # Standardized JSON response envelopes
-│
-├── frontend/                     # Streamlit Frontend Web Application
-│   ├── app.py                   # Streamlit Application Entry Point & Navigation Router
-│   ├── config.py                # Frontend configuration & backend URL resolution
-│   ├── components/              # Reusable UI widgets and custom CSS design system
-│   │   └── ui.py                # UI components, cards, tables, status indicators
-│   └── services/                # HTTP API Client communicating with Flask
-│       └── api_client.py        # Safe, structured REST client
-│
-├── migrations/                   # Alembic database migrations
-│   ├── env.py                   # Alembic runtime environment
-│   ├── script.py.mako           # Migration version template
-│   └── versions/                # Migration revisions
-│       └── 001_initial_schema.py# Initial schema creation (users, plants, etc.)
-│
-└── tests/                        # Automated unit and integration tests (65 tests)
-    ├── test_backend_verification.py # 11 critical project verification test cases
-    ├── test_recommendation_history.py # Recommendation persistence & history tests
-    ├── test_recommendation_api.py   # REST API endpoint tests
-    ├── test_recommendation_engine.py# Scoring algorithm & heuristic tests
-    ├── test_plant_api_service.py    # External API caching and fallback tests
-    ├── test_api_client.py           # Frontend API client tests
-    └── test_database.py             # Database models, relationships, and constraints
-```
+## 🧪 Recommendation Methodology
 
----
+GROWIT uses a **content-based recommendation system** with deterministic weighted scoring:
 
-## ⚙️ Environment Variables Documentation
+| Factor | Weight | Description |
+| :--- | :--- | :--- |
+| Climate | 30% | Evaluates compatibility between user's climate zone and plant's preferred climate |
+| Sunlight | 30% | Matches user's available sunlight with plant's light requirements |
+| Soil Type | 20% | Compares user's soil texture with plant's soil preference |
+| Available Space | 20% | Evaluates whether user's available space accommodates the plant |
 
-All sensitive credentials and environment configurations are managed via environment variables. Copy `.env.example` to `.env` for local execution:
+Each recommendation includes:
+- Compatibility score (0–100%)
+- Matched factors (why the plant was recommended)
+- Unmatched factors (considerations for the user)
+- Basic care information
 
-```bash
-cp .env.example .env
-```
+The system is fully deterministic and explainable — no black-box ML models.
 
-| Variable Name | Required | Default / Example | Description |
-| :--- | :--- | :--- | :--- |
-| **`FLASK_ENV`** | No | `development` | Environment mode (`development`, `production`, `testing`). |
-| **`SECRET_KEY`** | Yes (in prod) | `dev-secret-key...` | Cryptographic secret for signing session cookies. |
-| **`CORS_ORIGINS`** | No | `http://localhost:8501` | Allowed origins for CORS (comma-separated). |
-| **`DATABASE_URL`** | Yes | `postgresql://user:pass@host:5432/dbname` | Full PostgreSQL connection string (auto-normalized). |
-| **`BACKEND_API_URL`**| Yes | `http://localhost:5000/api/v1` | URL the Streamlit frontend uses to call Flask. |
-| **`PLANT_API_KEY`** | No | `sk-...` | Optional API key for Perenual botanical data. |
-| **`PLANT_API_TIMEOUT`**| No | `8` | External API HTTP timeout in seconds. |
-| **`PLANT_API_CACHE_TTL`**| No| `300` | In-memory cache duration for external API (seconds). |
+## 🗄️ Database Schema
 
-> [!CAUTION]
-> Never commit `.env` or any file containing real database passwords, secret keys, or API tokens to source control. `.env` is ignored by `.gitignore`.
+| Table | Primary Key | Key Columns |
+|-------|-------------|-------------|
+| `users` | `user_id` | `name`, `email` (unique), `location`, `created_at`, `updated_at` |
+| `plants` | `plant_id` | `name` (unique), `scientific_name`, `soil_type`, `climate`, `sunlight`, `water_needs`, `space_requirement`, `description`, `image_url`, `created_at`, `updated_at` |
+| `recommendations` | `rec_id` | `user_id` (FK), `plant_id` (FK), `search_id` (FK), `match_score`, `notes`, `timestamp` |
+| `search_history` | `history_id` | `user_id` (FK), `soil_type`, `climate`, `sunlight`, `water_needs`, `space_requirement`, `location`, `query_text`, `results_count`, `timestamp` |
 
----
+**Relationships:** User → Recommendations → Plant, User → SearchHistory → Recommendations
 
-## 🚀 Local Development Setup
-
-### 1. Prerequisites
-- **Python 3.10+** (Tested on Python 3.11, 3.12, 3.13)
-- **PostgreSQL 14+** (Local service or Docker container)
-- **Git**
-
-### 2. Clone and Setup Environment
-```bash
-git clone https://github.com/your-username/Crop_Recommendation.git
-cd Crop_Recommendation
-
-# Create and activate virtual environment
-python -m venv venv
-# On Windows:
-venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 3. Initialize Database and Seed Data
-Ensure PostgreSQL is running and your `plant_db` database exists:
-```bash
-# Apply migrations using Alembic
-python -m alembic upgrade head
-
-# Seed sample botanical catalog and demonstration user
-python -m backend.database.seed
-```
-
-### 4. Run the Backend API Server
-```bash
-# Starts Flask development server on http://localhost:5000
-python -m flask --app backend.app run --port 5000
-```
-Verify the API is operational by browsing to:
-`http://localhost:5000/api/health`
-
-### 5. Run the Streamlit Frontend
-In a new terminal window (with virtual environment active):
-```bash
-# Starts Streamlit app on http://localhost:8501
-streamlit run frontend/app.py
-```
-Open your browser at `http://localhost:8501`.
-
----
-
-## 🧪 Running Automated Tests
-
-FloraMatch includes a comprehensive suite of **65 automated unit and integration tests** covering models, API endpoints, recommendation heuristics, error states, and history persistence.
-
-```bash
-# Run all tests
-python -m pytest tests/ -v
-
-# Run the 11 critical verification test cases specifically
-python -m pytest tests/test_backend_verification.py -v
-```
-
-### Test Coverage Highlights
-- ✅ **Valid Recommendation Request**: Ensures 200 response with ranked items and factor explainability.
-- ✅ **Missing Soil Type & Missing Climate**: Verifies graceful handling and fallback defaults without error.
-- ✅ **Invalid Sunlight & Invalid Space**: Validates safe handling of unknown user inputs.
-- ✅ **No Matching Plants**: Tests safe return of empty recommendation list `[]`.
-- ✅ **Plant Search**: Verifies multi-attribute queries across Name, Soil, Climate, and Sunlight.
-- ✅ **Plant Details**: Validates complete details and HTTP 404 for invalid IDs.
-- ✅ **Database Offline Fallback**: Verifies seamless fallback to in-memory `SAMPLE_PLANTS` when database connectivity drops.
-- ✅ **External API Unavailable Fallback**: Verifies local catalog works completely without external API keys.
-- ✅ **Recommendation History & Duplicate Prevention**: Verifies persistence to PostgreSQL and prevention of redundant records.
-
----
-
-## 🌐 Production Deployment Guide
-
-You can deploy FloraMatch to **Render** or **Railway** with high availability and automated builds.
-
----
-
-### Option A: Deployment to Render (Recommended)
-
-Render provides native PostgreSQL databases and managed Web Services with free-tier support.
-
-#### Step 1: Push Repository to GitHub
-Ensure all code and configuration files (`render.yaml`, `Procfile`, `requirements.txt`) are committed and pushed to your GitHub repository.
-
-#### Step 2: Create a Render PostgreSQL Database
-1. Log in to [Render Dashboard](https://dashboard.render.com/).
-2. Click **New +** → **PostgreSQL**.
-3. Name: `floramatch-db`
-4. Database Name: `plant_db`
-5. User: `postgres`
-6. Plan: **Free**
-7. Click **Create Database**.
-8. Once provisioned, copy the **Internal Database URL** (e.g. `postgresql://postgres:...@dpg-...-a:5432/plant_db`).
-
-#### Step 3: Deploy Backend Web Service
-1. Click **New +** → **Web Service** → Connect your GitHub repository.
-2. Name: `floramatch-backend`
-3. Runtime: **Python**
-4. Build Command:
-   ```bash
-   pip install -r requirements.txt && python -m alembic upgrade head && python -m backend.database.seed
-   ```
-5. Start Command:
-   ```bash
-   gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT --workers 4 --timeout 120
-   ```
-6. Add Environment Variables:
-   - `FLASK_ENV` = `production`
-   - `DATABASE_URL` = *(Paste Internal Database URL from Step 2)*
-   - `SECRET_KEY` = *(Generate a 32-character random string)*
-   - `CORS_ORIGINS` = `https://floramatch-frontend.onrender.com,http://localhost:8501`
-   - `PLANT_API_KEY` = *(Optional: your Perenual API key)*
-7. Click **Create Web Service**. Note your backend URL (e.g. `https://floramatch-backend.onrender.com`).
-
-#### Step 4: Deploy Streamlit Frontend Web Service
-1. Click **New +** → **Web Service** → Connect the same GitHub repository.
-2. Name: `floramatch-frontend`
-3. Runtime: **Python**
-4. Build Command:
-   ```bash
-   pip install -r requirements.txt
-   ```
-5. Start Command:
-   ```bash
-   streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
-   ```
-6. Add Environment Variables:
-   - `BACKEND_API_URL` = `https://floramatch-backend.onrender.com/api/v1`
-   - `API_TIMEOUT_SECONDS` = `10`
-7. Click **Create Web Service**.
-
----
-
-### Option B: Deployment to Railway
-
-#### Step 1: Create a Railway Project
-1. Log in to [Railway](https://railway.app/).
-2. Click **New Project** → **Provision PostgreSQL**.
-3. Railway automatically creates a PostgreSQL instance and exposes `DATABASE_URL`.
-
-#### Step 2: Deploy Backend Service
-1. In the same project, click **New** → **GitHub Repo** → select repository.
-2. Go to **Settings** → Set **Service Name** to `backend`.
-3. Set **Start Command**:
-   ```bash
-   python -m alembic upgrade head && python -m backend.database.seed && gunicorn "backend.app:create_app()" --bind 0.0.0.0:$PORT --workers 4 --timeout 120
-   ```
-4. Set **Variables**:
-   - `FLASK_ENV` = `production`
-   - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}` *(Reference Railway's PostgreSQL variable)*
-   - `SECRET_KEY` = *(Random secret)*
-   - `CORS_ORIGINS` = `*`
-   - `PLANT_API_KEY` = *(Optional: Perenual key)*
-5. Generate a public domain under **Settings** → **Networking** (e.g. `https://floramatch-backend.up.railway.app`).
-
-#### Step 3: Deploy Frontend Service
-1. In the same project, click **New** → **GitHub Repo** → select same repository.
-2. Go to **Settings** → Set **Service Name** to `frontend`.
-3. Set **Start Command**:
-   ```bash
-   streamlit run frontend/app.py --server.port $PORT --server.address 0.0.0.0 --server.headless true
-   ```
-4. Set **Variables**:
-   - `BACKEND_API_URL` = `https://floramatch-backend.up.railway.app/api/v1`
-   - `API_TIMEOUT_SECONDS` = `10`
-5. Generate a public domain under **Settings** → **Networking**.
-
----
-
-## 📡 API Reference Overview
+## 🌐 API Reference
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Backend and PostgreSQL database health status check. |
-| `GET` | `/api/info` | Capabilities, endpoints, and external API metadata. |
-| `GET` | `/api/plants` | Paginated catalog of all plants in database. |
-| `GET` | `/api/plants/search?q=<query>` | Multi-criteria search across Name, Soil, Climate, Sunlight. |
-| `GET` | `/api/plants/<plant_id>` | Detailed plant information with care requirements and optional external API enrichment. |
-| `POST` | `/api/recommendations/generate` | Generates ranked recommendations, scores, and persists to history. |
-| `GET` | `/api/recommendations/<user_id>` | Retrieves persistent recommendation history for a specific user. |
-| `GET` | `/api/recommendations/history` | Retrieves recent recommendation records across sessions. |
+| `GET` | `/api/health` | Backend and PostgreSQL health status |
+| `GET` | `/api/info` | System capabilities and metadata |
+| `GET` | `/api/plants` | Paginated plant catalog |
+| `GET` | `/api/plants/search?q=<query>` | Search plants by name, soil, climate, sunlight |
+| `GET` | `/api/plants/<id>` | Plant details by ID |
+| `POST` | `/api/recommendations/generate` | Generate ranked plant recommendations |
+| `GET` | `/api/recommendations/<user_id>` | User recommendation history |
+| `GET` | `/api/recommendations/history` | Recent recommendation history |
 
-### Example Recommendation Payload (`POST /api/recommendations/generate`):
+### Example Recommendation Request
 ```json
 {
   "soil_type": "Sandy",
   "climate": "Warm/Dry",
   "sunlight": "Full Sun",
   "space": "Minimal",
-  "limit": 3,
+  "limit": 5,
   "user_id": 1,
   "enrich": false
 }
 ```
 
+## 🔌 External Botanical API
+
+GROWIT integrates with the **Perenual Plant API** (https://perenual.com/docs/api) for:
+- Plant images and thumbnails
+- Scientific names and common names
+- Detailed care instructions
+- Indoor/outdoor suitability
+- Pet toxicity information
+
+The external API is **optional** — the application functions fully using the local PostgreSQL database when the API is unavailable or unconfigured. API keys are stored exclusively in environment variables.
+
+## 📁 Project Structure
+
+```text
+Crop_Recommendation/
+├── Procfile                      # Process declaration for cloud platforms
+├── render.yaml                   # Render deployment blueprint
+├── railway.json                  # Railway deployment configuration
+├── alembic.ini                   # Alembic migration configuration
+├── requirements.txt              # Python dependencies
+├── .env.example                  # Environment variable template
+├── README.md                     # Project documentation
+│
+├── backend/                      # Flask Backend REST API
+│   ├── app.py                   # Flask Application Factory
+│   ├── config.py                # Environment-based configuration
+│   ├── api/
+│   │   └── routes.py            # REST API endpoints
+│   ├── database/
+│   │   ├── connection.py        # SQLAlchemy engine and session management
+│   │   ├── manage.py            # Database CLI management tool
+│   │   ├── seed.py              # Plant catalog and demo data seeder
+│   │   └── models/              # SQLAlchemy ORM Models
+│   │       ├── user.py
+│   │       ├── plant.py
+│   │       ├── recommendation.py
+│   │       └── search_history.py
+│   ├── services/
+│   │   ├── plant_service.py     # Plant retrieval and search
+│   │   ├── plant_api_service.py # External API orchestration
+│   │   └── recommendation_service.py
+│   ├── recommendation/
+│   │   └── engine.py            # Content-based scoring engine
+│   ├── integrations/
+│   │   ├── perenual_client.py   # Perenual API HTTP client
+│   │   └── schema.py            # Normalized plant schema
+│   └── utils/
+│       └── response.py          # JSON response formatters
+│
+├── frontend/                     # Streamlit Frontend
+│   ├── app.py                   # Streamlit application
+│   ├── config.py                # Frontend configuration
+│   ├── components/
+│   │   └── ui.py                # UI components and design system
+│   └── services/
+│       └── api_client.py        # HTTP client for Flask API
+│
+├── migrations/                   # Alembic database migrations
+│   └── versions/
+│       └── 001_initial_schema.py
+│
+└── tests/                        # Automated tests
+    ├── conftest.py
+    ├── test_recommendation_engine.py
+    ├── test_recommendation_api.py
+    ├── test_recommendation_history.py
+    ├── test_plant_api_service.py
+    ├── test_api_client.py
+    ├── test_database.py
+    └── test_backend_verification.py
+```
+
+## ⚙️ Installation
+
+### Prerequisites
+- Python 3.10+
+- PostgreSQL 14+ (or SQLite for development)
+- Git
+
+### Setup
+```bash
+git clone https://github.com/your-username/Crop_Recommendation.git
+cd Crop_Recommendation
+
+# Create and activate virtual environment
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Linux/macOS:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## 🔐 Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Required | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `DATABASE_URL` | Yes | `postgresql://postgres:postgres@localhost:5432/plant_db` | PostgreSQL connection string |
+| `FLASK_ENV` | No | `development` | Environment mode |
+| `SECRET_KEY` | Yes (prod) | `dev-secret-key...` | Session signing key |
+| `BACKEND_API_URL` | Yes | `http://localhost:5000/api/v1` | Flask API URL for Streamlit |
+| `PERENUAL_API_KEY` | No | — | Perenual botanical API key |
+| `PLANT_API_KEY` | No | — | Generic plant API key alias |
+
+> **⚠️ Never commit `.env` or files containing real API keys to source control.**
+
+## 🚀 Running the Backend
+
+```bash
+# Initialize database
+python -m backend.database.manage init
+
+# Seed sample plants
+python -m backend.database.manage seed
+
+# Start Flask server
+python -m flask --app backend.app run --port 5000
+```
+
+Verify: http://localhost:5000/api/health
+
+## 🖥️ Running the Frontend
+
+In a separate terminal:
+
+```bash
+streamlit run frontend/app.py
+```
+
+Open: http://localhost:8501
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run specific test files
+python -m pytest tests/test_recommendation_engine.py -v
+python -m pytest tests/test_backend_verification.py -v
+```
+
+## ⚠️ Limitations
+
+1. The recommendation engine uses rule-based weighted scoring, not machine learning.
+2. The plant database is pre-seeded with ~30 curated plants; real-world deployment would require a larger dataset.
+3. External API (Perenual) has rate limits on the free tier.
+4. User authentication is lightweight (profile-based, no password/session security).
+5. SQLite is used as a development fallback; PostgreSQL is required for production.
+
+## 🔮 Future Scope
+
+1. Machine learning-based recommendation model trained on user feedback data.
+2. Plant disease detection using computer vision.
+3. Mobile application (React Native or Flutter).
+4. IoT sensor integration for real-time soil and climate monitoring.
+5. Community features — user reviews and plant care tips sharing.
+6. Multi-language support.
+
 ---
 
-## 🔒 Security Best Practices Implemented
-
-1. **No Hardcoded Secrets**: All database connection strings, passwords, and external API tokens are read exclusively from environment variables.
-2. **Safe Client Communication**: Streamlit never accesses PostgreSQL directly; all database interaction is mediated by Flask backend services.
-3. **External API Key Concealment**: Third-party API keys (Perenual) are stored strictly on the backend and never exposed to the browser or Streamlit client.
-4. **Resilient Offline Fallback**: If PostgreSQL or external APIs are unreachable, the system returns curated fallback data without unhandled exceptions.
-5. **CORS Restrictions**: Flask CORS is locked down to configurable origins in production.
-6. **Input Sanitization**: Recommendation criteria and search queries are sanitized and safe against SQL injection via SQLAlchemy ORM parameterized queries.
-
----
-
-## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
+**GROWIT – Plant Recommendation Website** | College Mini Project

@@ -132,14 +132,14 @@ class TestDatabaseLayer(unittest.TestCase):
         self.assertEqual(user.search_history[0].climate, "Tropical")
 
     def test_seed_database_execution_and_idempotency(self):
-        """Verify seeding populates the 5 sample plants and is idempotent."""
+        """Verify seeding populates the sample plants and is idempotent."""
         # Initial seed
         stats1 = seed_database(self.session)
-        self.assertEqual(stats1["plants_created"], 5)
+        self.assertEqual(stats1["plants_created"], len(SAMPLE_PLANTS))
         self.assertEqual(stats1["users_created"], 1)
 
         total_plants = self.session.query(Plant).count()
-        self.assertEqual(total_plants, 5)
+        self.assertEqual(total_plants, len(SAMPLE_PLANTS))
 
         # Verify each specified plant exists with exact expected criteria
         aloe = self.session.query(Plant).filter(Plant.name == "Aloe Vera").first()
@@ -180,16 +180,16 @@ class TestDatabaseLayer(unittest.TestCase):
         # Second seed (must NOT duplicate records)
         stats2 = seed_database(self.session)
         self.assertEqual(stats2["plants_created"], 0)
-        self.assertEqual(stats2["plants_updated"], 5)
-        self.assertEqual(self.session.query(Plant).count(), 5)
+        self.assertEqual(stats2["plants_updated"], len(SAMPLE_PLANTS))
+        self.assertEqual(self.session.query(Plant).count(), len(SAMPLE_PLANTS))
 
     def test_plant_service_integration(self):
         """Verify PlantService works seamlessly with the enhanced Plant model."""
         seed_database(self.session)
         service = PlantService(self.session)
 
-        plants = service.get_all_plants()
-        self.assertEqual(len(plants), 5)
+        plants = service.get_all_plants(limit=100)
+        self.assertEqual(len(plants), len(SAMPLE_PLANTS))
 
         first_plant_id = plants[0]["plant_id"]
         fetched = service.get_plant_by_id(first_plant_id)

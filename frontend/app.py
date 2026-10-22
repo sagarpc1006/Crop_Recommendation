@@ -1,4 +1,4 @@
-"""FloraMatch — Streamlit Frontend Application.
+"""GROWIT – Plant Recommendation Website — Streamlit Frontend Application.
 
 7 sections:
   1. Home          — Hero, features, CTA
@@ -49,11 +49,11 @@ from frontend.components.ui import (
 
 # ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="FloraMatch — Plant Recommendation",
+    page_title="GROWIT – Plant Recommendation Website",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded",
-    menu_items={"About": "FloraMatch v1.0 — Smart plant recommendations for every environment."},
+    menu_items={"About": "GROWIT v1.0 – Plant Recommendation Website. Smart plant recommendations for every environment."},
 )
 inject_custom_css()
 
@@ -97,6 +97,12 @@ if "form_enrich" not in st.session_state:
     st.session_state.form_enrich = False
 if "current_user_id" not in st.session_state:
     st.session_state.current_user_id = 1
+if "user_name" not in st.session_state:
+    st.session_state.user_name = "Botanical Explorer"
+if "user_email" not in st.session_state:
+    st.session_state.user_email = "explorer@example.com"
+if "user_location" not in st.session_state:
+    st.session_state.user_location = "Austin, TX"
 if "history_view_mode" not in st.session_state:
     st.session_state.history_view_mode = "Table"
 
@@ -123,19 +129,32 @@ with st.sidebar:
     st.markdown("""
     <div style="text-align:center;padding:1rem 0 0.5rem">
         <span style="font-size:2.5rem">🌿</span>
-        <div style="font-weight:800;font-size:1.1rem;color:#e8f5e9;margin-top:0.3rem">FloraMatch</div>
-        <div style="font-size:0.75rem;color:#81c784">v1.0 — Plant Intelligence</div>
+        <div style="font-weight:800;font-size:1.15rem;color:#e8f5e9;margin-top:0.3rem">GROWIT</div>
+        <div style="font-size:0.75rem;color:#81c784">Plant Recommendation Website</div>
     </div>
     """, unsafe_allow_html=True)
     st.divider()
 
-    # User profile badge
-    st.markdown('<div style="color:#a5d6a7;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;margin-bottom:0.4rem">ACTIVE USER</div>',
+    # User profile section
+    st.markdown('<div style="color:#a5d6a7;font-size:0.8rem;font-weight:600;letter-spacing:0.5px;margin-bottom:0.4rem">USER PROFILE</div>',
                 unsafe_allow_html=True)
+    with st.expander(f"👤 {st.session_state.user_name}", expanded=False):
+        new_name = st.text_input("Name", value=st.session_state.user_name, key="profile_name_input")
+        new_email = st.text_input("Email", value=st.session_state.user_email, key="profile_email_input",
+                                  placeholder="your@email.com")
+        new_location = st.text_input("Location", value=st.session_state.user_location, key="profile_loc_input",
+                                     placeholder="e.g. Mumbai, India")
+        if st.button("💾 Save Profile", key="btn_save_profile", use_container_width=True):
+            st.session_state.user_name = new_name.strip() or "Botanical Explorer"
+            st.session_state.user_email = new_email.strip() or "explorer@example.com"
+            st.session_state.user_location = new_location.strip()
+            st.success("Profile saved!")
+            st.rerun()
+
     st.markdown(f"""
     <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:0.5rem 0.8rem;margin-bottom:0.8rem">
-        <div style="font-weight:700;color:#e8f5e9;font-size:0.88rem">👤 Botanical Explorer</div>
-        <div style="font-size:0.75rem;color:#a5d6a7">User ID: #{st.session_state.current_user_id}</div>
+        <div style="font-weight:700;color:#e8f5e9;font-size:0.88rem">👤 {st.session_state.user_name}</div>
+        <div style="font-size:0.75rem;color:#a5d6a7">User ID: #{st.session_state.current_user_id} {('· ' + st.session_state.user_location) if st.session_state.user_location else ''}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -186,7 +205,7 @@ def page_home():
         st.session_state.page = "🌱 Recommendations"
         st.rerun()
 
-    section_heading("✨", "Why FloraMatch?")
+    section_heading("✨", "Why GROWIT?")
     render_feature_cards()
 
     st.markdown("")
@@ -225,7 +244,7 @@ SPACE_OPTIONS   = ["Small", "Medium", "Large", "Minimal", "Expansive"]
 
 def page_recommendations():
     render_header("Plant Recommendations",
-                  "Tell us about your environment — we'll find your perfect plant match.")
+                  "Find the Right Plant for Your Space")
 
     # Safe option indices based on session state
     soil_idx = SOIL_OPTIONS.index(st.session_state.form_soil) if st.session_state.form_soil in SOIL_OPTIONS else 1
@@ -236,8 +255,8 @@ def page_recommendations():
     form_col, gap, result_col = st.columns([1, 0.05, 1.6])
 
     with form_col:
-        section_heading("🌾", "Your Growing Conditions")
-        st.markdown('<p style="color:#555;font-size:0.9rem;margin-bottom:1rem">Configure your environment to receive personalized plant matches.</p>',
+        section_heading("🌾", "Find the Right Plant for Your Space")
+        st.markdown('<p style="color:#555;font-size:0.9rem;margin-bottom:1rem">Configure your environmental conditions to receive personalized plant matches.</p>',
                     unsafe_allow_html=True)
 
         with st.form("recommendation_form", clear_on_submit=False):
@@ -272,7 +291,7 @@ def page_recommendations():
             )
 
             submitted = st.form_submit_button(
-                "🌱 Recommend Plants", type="primary", use_container_width=True
+                "🌱 Get Recommendations", type="primary", use_container_width=True
             )
 
         # Handle form submission or programmatic trigger (retry)
@@ -679,7 +698,7 @@ def page_care_guide():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def page_about():
-    render_header("About FloraMatch", "Architecture, API docs, and project information.")
+    render_header("About GROWIT", "Architecture, API documentation, and project information.")
 
     tab_arch, tab_api, tab_db = st.tabs([
         "🏛️ Architecture", "🌐 REST API", "🗄️ Database Schema"

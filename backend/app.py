@@ -43,7 +43,7 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FloraMatch Backend API</title>
+<title>GROWIT Backend API</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px; display: flex; justify-content: center; align-items: center; min-height: 80vh; margin: 0; }
   .card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 36px; max-width: 620px; width: 100%; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
@@ -61,7 +61,7 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
 <body>
 <div class="card">
   <div class="badge">● Backend Status: Online</div>
-  <h1>🌿 FloraMatch Backend API</h1>
+  <h1>🌿 GROWIT Backend API</h1>
   <p>The Flask REST API backend server is operational and connected to the database.</p>
   <ul>
     <li>🌐 <strong>Web Application (Streamlit):</strong> <a href="http://localhost:8501" target="_blank">http://localhost:8501</a></li>
@@ -69,13 +69,13 @@ def create_app(config_class: type[BaseConfig] | None = None) -> Flask:
     <li>📋 <strong>System Information:</strong> <a href="/api/info">/api/info</a></li>
     <li>🌱 <strong>Plant Catalog:</strong> <a href="/api/plants">/api/plants</a></li>
   </ul>
-  <a href="http://localhost:8501" class="btn" target="_blank">Open FloraMatch Web Application →</a>
+  <a href="http://localhost:8501" class="btn" target="_blank">Open GROWIT Web Application →</a>
 </div>
 </body>
 </html>"""
         return jsonify({
             "status": "online",
-            "service": "FloraMatch Plant Recommendation Backend API",
+            "service": "GROWIT Plant Recommendation Backend API",
             "health": "/api/health",
             "info": "/api/info",
             "frontend_ui": "http://localhost:8501"

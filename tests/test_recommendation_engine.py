@@ -103,6 +103,78 @@ class TestRecommendationEngine(unittest.TestCase):
             self.assertIn("sunlight", rec["basic_care"])
             self.assertIn("water_needs", rec["basic_care"])
 
+    def test_soil_matching(self):
+        """Verify soil factor evaluation for exact, compatible, and mismatched soils."""
+        plant = {"name": "Test Plant", "soil_type": "Sandy", "climate": "Warm/Dry", "sunlight": "Full Sun", "space_requirement": "Small"}
+        
+        # Exact match
+        crit_exact = RecommendationCriteria(soil_type="Sandy")
+        res_exact = self.engine.calculate_score(plant, crit_exact)
+        self.assertTrue(any("Soil matches" in m for m in res_exact.matched_factors))
+
+        # Well-drained plant with Sandy user soil
+        plant_wd = {"name": "Test WD", "soil_type": "Well-drained", "climate": "Warm/Dry", "sunlight": "Full Sun", "space_requirement": "Small"}
+        crit_sandy = RecommendationCriteria(soil_type="Sandy")
+        res_wd = self.engine.calculate_score(plant_wd, crit_sandy)
+        self.assertTrue(any("Soil compatible" in m for m in res_wd.matched_factors))
+
+        # Mismatched soil (Clay vs Sandy)
+        crit_clay = RecommendationCriteria(soil_type="Clay")
+        res_mismatch = self.engine.calculate_score(plant, crit_clay)
+        self.assertTrue(any("Soil preference differs" in u for u in res_mismatch.unmatched_factors))
+
+    def test_climate_matching(self):
+        """Verify climate factor evaluation for exact match, compatible zones, and mismatch."""
+        plant = {"name": "Test Plant", "soil_type": "Sandy", "climate": "Warm/Dry", "sunlight": "Full Sun", "space_requirement": "Small"}
+
+        # Exact match
+        crit_exact = RecommendationCriteria(climate="Warm/Dry")
+        res_exact = self.engine.calculate_score(plant, crit_exact)
+        self.assertTrue(any("Climate matches" in m for m in res_exact.matched_factors))
+
+        # Compatible warm zone
+        crit_warm = RecommendationCriteria(climate="Tropical")
+        res_warm = self.engine.calculate_score(plant, crit_warm)
+        self.assertTrue(any("Climate compatible" in m for m in res_warm.matched_factors))
+
+        # Incompatible cold climate
+        crit_cold = RecommendationCriteria(climate="Arctic")
+        res_cold = self.engine.calculate_score(plant, crit_cold)
+        self.assertTrue(any("Climate preference differs" in u for u in res_cold.unmatched_factors))
+
+    def test_sunlight_matching(self):
+        """Verify sunlight factor evaluation for exact match, tolerances, and mismatch."""
+        plant = {"name": "Test Plant", "soil_type": "Sandy", "climate": "Warm/Dry", "sunlight": "Full Sun", "space_requirement": "Small"}
+
+        # Exact match
+        crit_exact = RecommendationCriteria(sunlight="Full Sun")
+        res_exact = self.engine.calculate_score(plant, crit_exact)
+        self.assertTrue(any("Sunlight matches" in m for m in res_exact.matched_factors))
+
+        # Mismatch
+        crit_shade = RecommendationCriteria(sunlight="Low Light")
+        res_shade = self.engine.calculate_score(plant, crit_shade)
+        self.assertTrue(any("Sunlight preference differs" in u for u in res_shade.unmatched_factors))
+
+    def test_space_matching(self):
+        """Verify space factor evaluation for various space footprints."""
+        plant_compact = {"name": "Compact Plant", "soil_type": "Sandy", "climate": "Warm/Dry", "sunlight": "Full Sun", "space_requirement": "Compact"}
+        plant_large = {"name": "Large Plant", "soil_type": "Sandy", "climate": "Warm/Dry", "sunlight": "Full Sun", "space_requirement": "Large"}
+
+        # Small user space with compact plant
+        crit_small = RecommendationCriteria(space="Small")
+        res_compact = self.engine.calculate_score(plant_compact, crit_small)
+        self.assertTrue(any("Space fits" in m for m in res_compact.matched_factors))
+
+        # Small user space with large plant
+        res_large = self.engine.calculate_score(plant_large, crit_small)
+        self.assertTrue(any("Space differs" in u for u in res_large.unmatched_factors))
+
+        # Expansive user space accommodates any plant
+        crit_expansive = RecommendationCriteria(space="Expansive")
+        res_exp = self.engine.calculate_score(plant_large, crit_expansive)
+        self.assertTrue(any("Space fits" in m for m in res_exp.matched_factors))
+
 
 if __name__ == "__main__":
     unittest.main()

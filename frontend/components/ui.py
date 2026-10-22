@@ -1,5 +1,5 @@
 """
-Complete UI component library and design system for FloraMatch.
+Complete UI component library and design system for GROWIT.
 
 All visual primitives live here so app.py stays clean and declarative.
 """
@@ -60,7 +60,7 @@ def render_html(html: str, *args, **kwargs):
 
 
 def inject_custom_css():
-    """Inject the complete FloraMatch design system into the Streamlit app."""
+    """Inject the complete GROWIT design system into the Streamlit app."""
     render_html("""
     <style>
     /* ── Google Font ─────────────────────────────────────────────────── */
@@ -385,11 +385,11 @@ def render_hero(show_cta: bool = False):
     """Render the main hero banner. Returns True if CTA was clicked."""
     render_html("""
     <div class="flora-hero">
-        <h1>🌿 FloraMatch</h1>
-        <p>Find the right plant for your environment.</p>
+        <h1>🌿 GROWIT</h1>
+        <p>Find the Right Plant for Your Space</p>
         <p class="tagline">Smart recommendations based on your soil, climate, sunlight & space.</p>
         <div class="stat-row">
-            <span class="stat-chip">🌱 5+ Plant Species</span>
+            <span class="stat-chip">🌱 30+ Plant Species</span>
             <span class="stat-chip">🧪 Transparent Scoring</span>
             <span class="stat-chip">🌐 External API Enrichment</span>
         </div>
@@ -470,6 +470,7 @@ def render_plant_card(
 ):
     """Render a rich, interactive plant card for recommendations or search results."""
     name     = plant.get("name", "Unknown Plant")
+    sci_name = plant.get("scientific_name") or plant.get("scientificName")
     care     = plant.get("basic_care") or {}
     soil     = plant.get("soil_type") or care.get("soil_type") or "—"
     climate  = plant.get("climate") or care.get("climate") or "—"
@@ -516,18 +517,22 @@ def render_plant_card(
         src_cls   = "badge-blue" if source != "local" else "badge-green"
         score_html = f'<div style="margin-bottom:0.75rem"><span class="badge {src_cls}">{src_label}</span></div>'
 
-    # Matched / Unmatched factors
+    # Matched / Unmatched factors & Why Recommended
     factors_html = ""
+    if matched or unmatched:
+        factors_html += '<div style="font-size:0.78rem;font-weight:700;color:#0f3d2e;margin-top:0.4rem;margin-bottom:0.2rem">💡 Why Recommended:</div>'
     if matched:
         factors_html += "".join(
-            f'<span class="detail-chip" style="font-size:0.75rem;margin:0.15rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:50px;padding:0.2rem 0.6rem;display:inline-block;">✓ {m}</span>'
+            f'<span class="detail-chip" style="font-size:0.73rem;margin:0.12rem;background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:50px;padding:0.18rem 0.55rem;display:inline-block;">✓ {m}</span>'
             for m in matched[:2]
         )
     if unmatched:
         factors_html += "".join(
-            f'<span class="detail-chip" style="font-size:0.75rem;margin:0.15rem;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:50px;padding:0.2rem 0.6rem;display:inline-block;">⚠️ {u}</span>'
+            f'<span class="detail-chip" style="font-size:0.73rem;margin:0.12rem;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:50px;padding:0.18rem 0.55rem;display:inline-block;">⚠️ {u}</span>'
             for u in unmatched[:1]
         )
+
+    sci_name_html = f'<div style="font-size:0.82rem;color:#4a7c59;font-style:italic;margin-top:-0.3rem;margin-bottom:0.5rem;">{sci_name}</div>' if sci_name else ""
 
     meta_html = (
         f'<div class="plant-meta" style="display:flex;flex-direction:column;gap:0.35rem;margin-bottom:0.9rem;">'
@@ -543,10 +548,11 @@ def render_plant_card(
         f'<div class="plant-card">'
         f'{img_html}'
         f'<div class="plant-card-body">'
-        f'<div class="plant-card-name" style="font-size:1.05rem;font-weight:700;color:#0f3d2e;margin:0 0 0.5rem;">{emoji} {name}</div>'
+        f'<div class="plant-card-name" style="font-size:1.05rem;font-weight:700;color:#0f3d2e;margin:0 0 0.3rem;">{emoji} {name}</div>'
+        f'{sci_name_html}'
         f'{score_html}'
         f'{meta_html}'
-        f'{"<div style=\'margin-top:0.5rem;\'>" + factors_html + "</div>" if factors_html else ""}'
+        f'{"<div style=\'margin-top:0.4rem;\'>" + factors_html + "</div>" if factors_html else ""}'
         f'</div>'
         f'</div>'
     )
@@ -952,7 +958,7 @@ def render_feature_cards():
         ("🧪", "Transparent Scoring", "Compatibility score explained factor-by-factor — no black-box AI."),
         ("🌐", "External Enrichment", "Real images and care data pulled from the Perenual Plant API."),
         ("🗄️", "PostgreSQL Backed", "Plant catalog stored in a relational database with full-text search."),
-        ("🌱", "5 Starter Plants", "Curated seed data: Aloe Vera, Money Plant, Tulsi, Snake Plant & Marigold."),
+        ("🌱", "30+ Curated Plants", "Comprehensive botanical catalog covering indoor plants, herbs, flowers, succulents and more."),
         ("⚡", "Fast Recommendations", "Weighted scoring engine returns results in under 100 ms."),
         ("📖", "Care Guides", "Built-in watering, light, soil, and fertilising guidance for every plant."),
     ]
