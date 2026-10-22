@@ -60,21 +60,34 @@ class RecommendationService:
         # 3. Log to Database if database session is active
         if self.db:
             try:
-                # Resolve target user
+                # Resolve target user and profile details
+                user_name = criteria_data.get("user_name")
+                user_email = criteria_data.get("user_email")
+                user_location = criteria_data.get("user_location")
+
                 user = None
                 if user_id is not None:
                     user = self.db.query(User).filter(User.user_id == user_id).first()
+                if not user and user_email:
+                    user = self.db.query(User).filter(User.email == user_email).first()
                 if not user:
                     # Fallback to first existing user or create demo user
                     user = self.db.query(User).first()
                     if not user:
                         user = User(
-                            name="Botanical Explorer",
-                            email="explorer@example.com",
-                            location="Austin, TX",
+                            name=user_name or "Botanical Explorer",
+                            email=user_email or "explorer@example.com",
+                            location=user_location or "Austin, TX",
                         )
                         self.db.add(user)
                         self.db.flush()
+
+                # Update user profile information if provided
+                if user:
+                    if user_name and user.name != user_name:
+                        user.name = user_name
+                    if user_location and user.location != user_location:
+                        user.location = user_location
 
                 # Duplicate Prevention for Searches:
                 # Check if an identical search was logged recently (within 60s)
@@ -102,6 +115,7 @@ class RecommendationService:
                         climate=criteria.climate,
                         sunlight=criteria.sunlight,
                         space_requirement=criteria.space,
+                        location=user.location or user_location,
                         results_count=len(ranked_recommendations),
                     )
                     self.db.add(search_record)

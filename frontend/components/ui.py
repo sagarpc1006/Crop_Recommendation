@@ -684,7 +684,7 @@ def render_plant_detail(plant: dict, score_data: dict | None = None):
 
         # Recommendation Compatibility Score Banner (if navigated from recommendation)
         if score_data:
-            score_pct = score_data.get("score_pct", 0)
+            score_pct = score_data.get("score_pct") if score_data.get("score_pct") is not None else score_data.get("score", 0)
             fg, bg, label = _score_style(score_pct)
             render_html(f"""
             <div style="background:{bg};color:{fg};border-radius:12px;padding:0.9rem 1.2rem;margin-bottom:1rem;border:1px solid rgba(0,0,0,0.06)">
@@ -698,8 +698,8 @@ def render_plant_detail(plant: dict, score_data: dict | None = None):
             </div>
             """)
 
-            matched   = score_data.get("matched_factors", [])
-            unmatched = score_data.get("unmatched_factors", [])
+            matched   = score_data.get("matched_factors") if score_data.get("matched_factors") is not None else score_data.get("matched", [])
+            unmatched = score_data.get("unmatched_factors") if score_data.get("unmatched_factors") is not None else score_data.get("unmatched", [])
             if matched or unmatched:
                 mc, uc = st.columns(2)
                 with mc:
@@ -1162,8 +1162,11 @@ def render_my_history_table(recommendations: list[dict]):
                     st.session_state.selected_plant = plant
                     st.session_state.selected_plant_id = plant.get("plant_id")
                     st.session_state.selected_score_data = {
+                        "score_pct": score_pct,
                         "score": score_pct,
+                        "matched_factors": rec.get("matched_factors", []),
                         "matched": rec.get("matched_factors", []),
+                        "unmatched_factors": rec.get("unmatched_factors", []),
                         "unmatched": rec.get("unmatched_factors", []),
                     }
                     st.session_state.page = "🪴 Plant Details"
@@ -1243,8 +1246,11 @@ def render_my_history_cards(recommendations: list[dict]):
                     st.session_state.selected_plant = plant
                     st.session_state.selected_plant_id = plant.get("plant_id")
                     st.session_state.selected_score_data = {
+                        "score_pct": score_pct,
                         "score": score_pct,
+                        "matched_factors": rec.get("matched_factors", []),
                         "matched": rec.get("matched_factors", []),
+                        "unmatched_factors": rec.get("unmatched_factors", []),
                         "unmatched": rec.get("unmatched_factors", []),
                     }
                     st.session_state.page = "🪴 Plant Details"

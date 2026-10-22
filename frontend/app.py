@@ -318,6 +318,9 @@ def page_recommendations():
                     limit=n_results,
                     enrich=enrich,
                     user_id=st.session_state.get("current_user_id", 1),
+                    user_name=st.session_state.get("user_name"),
+                    user_email=st.session_state.get("user_email"),
+                    user_location=st.session_state.get("user_location"),
                 )
 
                 if rec_result["ok"]:
@@ -408,6 +411,7 @@ def page_recommendations():
                     )
                     if st.button("🔍 View Details", key=f"rec_details_{i}_{plant.get('plant_id', i)}"):
                         st.session_state.selected_plant = plant
+                        st.session_state.selected_plant_id = plant.get("plant_id") or plant.get("id")
                         st.session_state.selected_score_data = {
                             "score_pct": score_pct,
                             "matched_factors": matched,

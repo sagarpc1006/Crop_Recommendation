@@ -263,6 +263,10 @@ class BackendApiClient:
         }
         if user_id is not None or "user_id" in crit:
             payload["user_id"] = user_id if user_id is not None else crit.get("user_id")
+        for k in ("user_name", "user_email", "user_location"):
+            val = kwargs.get(k) or crit.get(k)
+            if val:
+                payload[k] = val
 
         result = self._post("/recommendations/generate", payload)
         if result["ok"] and result["data"]:
